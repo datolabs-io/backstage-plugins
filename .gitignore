@@ -6,7 +6,6 @@
 *.iml
 
 # Visual Studio Code
-.vscode/
 .vsls.json
 
 # Logs
