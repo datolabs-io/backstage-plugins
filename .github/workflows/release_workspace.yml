@@ -159,7 +159,7 @@ jobs:
       - name: publish
         run: |
           yarn config set -H 'npmAuthToken' "${{secrets.NPM_TOKEN}}"
-          yarn workspaces foreach -v --no-private npm publish --access public --tolerate-republish
+          yarn workspaces foreach -v --no-private npm publish --access public --tolerate-republish --worktree
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
