@@ -1,11 +1,15 @@
 {
-  "name": "@internal/{{name}}",
+  "name": "@internal/scaffolder-backend-module-gcp",
   "version": "1.0.0",
   "private": true,
   "engines": {
     "node": "20 || 22"
   },
   "scripts": {
+    "dev": "concurrently \"yarn start\" \"yarn start-backend\"",
+    "start": "yarn workspace app start",
+    "start-backend": "yarn workspace backend start",
+    "build:backend": "yarn workspace backend build",
     "tsc": "tsc",
     "tsc:full": "tsc --skipLibCheck false --incremental false",
     "build:all": "backstage-cli repo build --all",
@@ -30,14 +34,15 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/datolabs-io/backstage-plugins",
-    "directory": "workspaces/{{name}}"
+    "directory": "workspaces/scaffolder-backend-module-gcp"
   },
   "devDependencies": {
-    "@backstage/cli": "^{{version '@backstage/cli'}}",
-    "@backstage/e2e-test-utils": "^{{version '@backstage/e2e-test-utils'}}",
+    "@backstage/cli": "^0.29.4",
+    "@backstage/e2e-test-utils": "^0.1.1",
     "@backstage/repo-tools": "^0.10.0",
     "@changesets/cli": "^2.27.1",
     "@spotify/prettier-config": "^12.0.0",
+    "concurrently": "^8.0.0",
     "knip": "^5.27.4",
     "node-gyp": "^9.0.0",
     "prettier": "^2.3.2",
