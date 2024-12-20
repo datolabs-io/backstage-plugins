@@ -5904,6 +5904,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datolabs/plugin-scaffolder-backend-module-gcp@workspace:plugins/scaffolder-backend-module-gcp"
   dependencies:
+    "@backstage/backend-common": "npm:^0.25.0"
     "@backstage/backend-plugin-api": "npm:^1.1.0"
     "@backstage/cli": "npm:^0.29.4"
     "@backstage/plugin-scaffolder-node": "npm:^0.6.2"

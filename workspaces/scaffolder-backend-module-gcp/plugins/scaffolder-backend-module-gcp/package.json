@@ -12,7 +12,14 @@
     "types": "dist/index.d.ts"
   },
   "backstage": {
-    "role": "backend-plugin-module"
+    "role": "backend-plugin-module",
+    "pluginId": "scaffolder-backend-module-gcp",
+    "pluginPackage": "@datolabs/plugin-scaffolder-backend-module-gcp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github:datolabs-io/backstage-plugins",
+    "directory": "workspaces/scaffolder-backend-module-gcp/plugins/scaffolder-backend-module-gcp"
   },
   "scripts": {
     "start": "backstage-cli package start",
@@ -29,6 +36,7 @@
     "@google-cloud/secret-manager": "^5.6.0"
   },
   "devDependencies": {
+    "@backstage/backend-common": "^0.25.0",
     "@backstage/cli": "^0.29.4",
     "@backstage/plugin-scaffolder-node-test-utils": "^0.1.17"
   },
