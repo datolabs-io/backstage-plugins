@@ -1,13 +1,13 @@
 {
   "cSpell.words": [
     "codeowners",
+    "datolabs",
     "dotenv",
     "escaperegexp",
     "manypkg",
     "nvmrc",
-    "yarnpkg",
-    "manypkg",
     "postpack",
-    "datolabs"
+    "secretmanager",
+    "yarnpkg"
   ]
 }
