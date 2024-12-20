@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "bundled": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/datolabs-io/backstage-plugins",
+    "directory": "workspaces/scaffolder-backend-module-gcp/packages/app"
+  },
   "backstage": {
     "role": "frontend"
   },
