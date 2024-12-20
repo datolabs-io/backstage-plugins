@@ -1,0 +1,10 @@
+dist
+dist-types
+coverage
+.vscode
+.eslintrc.js
+.github
+.husky
+*.yml
+scripts
+workspaces/repo-tools/packages/cli/src/lib/workspaces/templates/workspace
