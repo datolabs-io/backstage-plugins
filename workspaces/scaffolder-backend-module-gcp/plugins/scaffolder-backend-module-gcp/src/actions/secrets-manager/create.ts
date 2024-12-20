@@ -80,7 +80,9 @@ export function createGcpSecretsManagerCreateAction() {
           },
         });
 
-        ctx.logger.info(`Secret successfully created: ${secret.name}, version: ${version.name}`);
+        ctx.logger.info(
+          `Secret successfully created: ${secret.name}, version: ${version.name}`,
+        );
       } catch (e) {
         ctx.logger.error('Error creating secret:', e);
         throw e;

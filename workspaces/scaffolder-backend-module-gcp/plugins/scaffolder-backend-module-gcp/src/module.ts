@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 The Backstage Authors
+ * Copyright 2024 Datolabs, MB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { createBackendModule } from "@backstage/backend-plugin-api";
-import { scaffolderActionsExtensionPoint  } from '@backstage/plugin-scaffolder-node/alpha';
-import { createExampleAction } from "./actions/example";
+import { createBackendModule } from '@backstage/backend-plugin-api';
+import { scaffolderActionsExtensionPoint } from '@backstage/plugin-scaffolder-node/alpha';
+import * as backendModuleGCP from './actions';
 
 /**
- * A backend module that registers the action into the scaffolder
+ * @public
  */
-export const scaffolderModule = createBackendModule({
-  moduleId: 'example-action',
+export const scaffolderBackendModuleGCP = createBackendModule({
   pluginId: 'scaffolder',
+  moduleId: 'scaffolder-backend-module-aws',
   register({ registerInit }) {
     registerInit({
       deps: {
-        scaffolderActions: scaffolderActionsExtensionPoint
+        scaffolder: scaffolderActionsExtensionPoint,
       },
-      async init({ scaffolderActions}) {
-        scaffolderActions.addActions(createExampleAction());
-      }
+      async init({ scaffolder }) {
+        scaffolder.addActions(
+          backendModuleGCP.createGcpSecretsManagerCreateAction(),
+        );
+      },
     });
   },
-})
+});
