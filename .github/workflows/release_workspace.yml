@@ -38,7 +38,7 @@ concurrency:
 jobs:
   changesets-pr:
     name: Update Version Packages PR for ${{ inputs.workspace }} on branch ${{ inputs.branch }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: ./workspaces/${{ inputs.workspace }}
@@ -52,6 +52,8 @@ jobs:
         uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
         with:
           ref: ${{ inputs.branch }}
+      - name: Enable Corepack
+        run: corepack enable
       - name: Set up Node
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
         with:
@@ -102,11 +104,11 @@ jobs:
           versionBranch: changesets-release/${{ inputs.workspace }}
           skipRootChangelogUpdate: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_SERVICE_ACCOUNT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
 
   release:
     name: Release workspace ${{ inputs.workspace }} on branch ${{ inputs.branch }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: changesets-pr
     if: needs.changesets-pr.outputs.needs_release == 'true' || inputs.force_release == true
     defaults:
@@ -121,6 +123,8 @@ jobs:
         uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
         with:
           ref: ${{ inputs.branch }}
+      - name: Enable Corepack
+        run: corepack enable
       - name: Set up Node
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4
         with:
@@ -163,4 +167,4 @@ jobs:
         run: node create-tag.js
         env:
           WORKSPACE_NAME: ${{ inputs.workspace }}
-          GITHUB_TOKEN: ${{ secrets.GH_SERVICE_ACCOUNT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
