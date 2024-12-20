@@ -16,6 +16,6 @@ The `datolabs-backstage-plugins` repository is organized into multiple workspace
 
 ## Available Plugins
 
-### [scaffolder-backend-module-gcp](./workspaces/scaffolder-backend-module-gcp)
+### [scaffolder-backend-module-gcp](./workspaces/scaffolder-backend-module-gcp/plugins/scaffolder-backend-module-gcp)
 
 Scaffolder Backend Module to interact with Google Cloud Platform (GCP), e.g. to create secrets in GCP Secret Manager.
