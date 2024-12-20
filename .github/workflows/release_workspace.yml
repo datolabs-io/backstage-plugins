@@ -92,6 +92,7 @@ jobs:
         env:
           WORKSPACE_NAME: ${{ inputs.workspace }}
           COMMIT_SHA_BEFORE: '${{ github.event.before }}'
+          TARGET_BRANCH: ${{inputs.branch}}
 
       - name: Update Version Packages (${{ inputs.workspace }}) PR
         id: changesets-pr
@@ -101,7 +102,7 @@ jobs:
           title: Version Packages (${{ inputs.workspace }})
           cwd: workspaces/${{ inputs.workspace }}
           version: yarn changeset version
-          versionBranch: changesets-release/${{ inputs.workspace }}
+          versionBranch: changesets-release/${{ inputs.workspace }}/${{ inputs.branch }}
           skipRootChangelogUpdate: true
         env:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
