@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+workspaces/**/packages/app/**     linguist-generated=true
+workspaces/**/packages/backend/** linguist-generated=true
