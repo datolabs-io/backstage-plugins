@@ -1,0 +1,45 @@
+app:
+  title: Scaffolded Backstage App
+  baseUrl: http://localhost:3000
+
+organization:
+  name: My Company
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+  csp:
+    connect-src: ["'self'", 'http:', 'https:']
+  cors:
+    origin: http://localhost:3000
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  database:
+    client: better-sqlite3
+    connection: ':memory:'
+
+auth:
+  providers:
+    guest: {}
+
+scaffolder: {}
+
+catalog:
+  import:
+    entityFilename: catalog-info.yaml
+    pullRequestBranchName: backstage-integration
+  rules:
+    - allow: [Component, System, API, Resource, Location, Template]
+  locations:
+    - type: url
+      target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-systems.yaml
+      rules:
+        - allow: [System]
+    - type: file
+      target: ../../examples/*.yaml
+      rules:
+        - allow: [Template]
+
+permission:
+  enabled: true
