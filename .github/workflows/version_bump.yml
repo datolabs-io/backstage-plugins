@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   version-bump:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -43,6 +43,9 @@ jobs:
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
         with:
           fetch-depth: 1
+
+      - name: Enable Corepack
+        run: corepack enable
 
       # Beginning of yarn setup
       - name: use node.js 20.x
@@ -59,7 +62,7 @@ jobs:
       - name: find location of global yarn cache
         id: yarn-cache
         if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
       - name: cache global yarn cache
         uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4
         if: steps.cache-modules.outputs.cache-hit != 'true'
