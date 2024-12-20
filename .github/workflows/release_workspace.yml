@@ -102,7 +102,7 @@ jobs:
           versionBranch: changesets-release/${{ inputs.workspace }}
           skipRootChangelogUpdate: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_SERVICE_ACCOUNT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
 
   release:
     name: Release workspace ${{ inputs.workspace }} on branch ${{ inputs.branch }}
@@ -163,4 +163,4 @@ jobs:
         run: node create-tag.js
         env:
           WORKSPACE_NAME: ${{ inputs.workspace }}
-          GITHUB_TOKEN: ${{ secrets.GH_SERVICE_ACCOUNT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
