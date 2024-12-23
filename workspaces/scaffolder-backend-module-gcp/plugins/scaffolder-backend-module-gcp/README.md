@@ -69,8 +69,10 @@ steps:
     action: datolabs:gcp:secrets-manager:create
     input:
       name: ${{ parameters.name }}
-      value: ${{ parameters.value }}
+      value: ${{ secrets.value }}
       project: ${{ parameters.project }}
 ```
+
+Please make sure to add `ui:field: Secret` to the secret value parameter in the template to ensure it is treated as sensitive.
 
 Full template examples can be found in the [examples](../../examples) directory.
