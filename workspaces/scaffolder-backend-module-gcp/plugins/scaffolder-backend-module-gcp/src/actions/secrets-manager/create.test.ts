@@ -44,6 +44,12 @@ describe('datolabs:gcp:secrets-manager:create', () => {
     createTemporaryDirectory: jest.fn(),
     checkpoint: jest.fn(),
     getInitiatorCredentials: jest.fn(),
+    task: {
+      id: 'test-id',
+      spec: {},
+      metadata: { name: 'test' },
+      status: {},
+    },
   };
 
   it('should create a secret successfully', async () => {
