@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
+import {
+  createTemplateAction,
+  TemplateAction,
+} from '@backstage/plugin-scaffolder-node';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 
-export function createGcpSecretsManagerCreateAction() {
-  return createTemplateAction<{
-    name: string;
-    value: string;
-    labels?: Record<string, string>;
-    project: string;
-  }>({
+export function createGcpSecretsManagerCreateAction(): TemplateAction<{
+  name: string;
+  value: string;
+  labels?: Record<string, string>;
+  project: string;
+}> {
+  return createTemplateAction({
     id: 'datolabs:gcp:secrets-manager:create',
     description: 'Creates a new secret in GCP Secret Manager',
     schema: {
