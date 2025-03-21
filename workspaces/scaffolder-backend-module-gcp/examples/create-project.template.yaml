@@ -1,0 +1,43 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-gcp-project
+  title: Create a GCP Project
+  description: Creates a new GCP Project.
+  tags:
+    - gcp
+spec:
+  type: template
+  parameters:
+    - title: Secret Details
+      required:
+        - displayName
+        - parent
+        - projectId
+      properties:
+        displayName:
+          title: Display Name
+          type: string
+          description: Project Display Name
+        parent:
+          title: Parent
+          type: string
+          description: Folder or Org
+        projectId:
+          title: Project ID
+          type: string
+          description: Project ID
+
+  steps:
+    - id: create-project
+      name: Create GCP Project
+      action: datolabs:gcp:project:create
+      input:
+        displayName: ${{ parameters.displayName }}
+        parent: ${{ parameters.parent }}
+        projectId: ${{ parameters.projectId }}
+
+  output:
+    links:
+      - title: View the Project in GCP Console
+        url: https://console.cloud.google.com/welcome?project=${{ parameters.projectId }}
