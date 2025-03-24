@@ -1,5 +1,11 @@
 # @datolabs/plugin-scaffolder-backend-module-gcp
 
+## 0.2.0
+
+### Minor Changes
+
+- f80dc39: Add action to create GCP Projects
+
 ## 0.1.1
 
 ### Patch Changes
