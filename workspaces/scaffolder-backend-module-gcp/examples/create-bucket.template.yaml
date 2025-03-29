@@ -1,0 +1,55 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-gcp-gcs-bucket
+  title: Create a GCP GCS Bucket
+  description: Creates a new GCS Bucket.
+  tags:
+    - gcp
+spec:
+  type: template
+  parameters:
+    - title: Bucket Details
+      required:
+        - project
+        - bucketName
+      properties:
+        bucketName:
+          title: Name of GCS Bucket to create. Must be globally unique.
+          type: string
+          description: Bucket Name
+        project:
+          title: Project ID
+          type: string
+          description: Project ID
+        autoclass:
+          title: Auto Class
+          type: boolean
+          properties:
+            enabled:
+              type: boolean
+              title: Enable Auto Class
+              description: Enable Auto Class
+              default: true
+          default: true
+          #ui:widget: CheckboxesWidget
+        location:
+          title: Location
+          type: string
+          description: Location
+          default: us-central1
+
+  steps:
+    - id: create-bucket
+      name: Create GCP Bucket
+      action: datolabs:gcp:bucket:create
+      input:
+        bucketName: ${{ parameters.bucketName }}
+        project: ${{ parameters.project }}
+        autoClass: ${{ parameters.autoclass }}
+        location: ${{ parameters.location }}
+
+  output:
+    links:
+      - title: View the Bucket in GCP Console
+        url: https://console.cloud.google.com/storage/browser?project=${{ parameters.project }}
