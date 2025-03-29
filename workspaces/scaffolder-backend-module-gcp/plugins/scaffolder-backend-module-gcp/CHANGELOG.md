@@ -1,5 +1,11 @@
 # @datolabs/plugin-scaffolder-backend-module-gcp
 
+## 0.3.0
+
+### Minor Changes
+
+- 1a475fa: Add Action to create GCS Bucket
+
 ## 0.2.0
 
 ### Minor Changes
