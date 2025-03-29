@@ -9,7 +9,7 @@ metadata:
 spec:
   type: template
   parameters:
-    - title: Secret Details
+    - title: Project Details
       required:
         - displayName
         - parent

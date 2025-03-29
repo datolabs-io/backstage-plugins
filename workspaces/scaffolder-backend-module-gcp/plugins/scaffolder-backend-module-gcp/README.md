@@ -55,6 +55,8 @@ Make sure the service account has the necessary IAM roles for the actions you pl
 
 - For Secret Manager: `roles/secretmanager.admin` or more granular permissions
 - For Create projects: `roles/resourcemanager.projectCreator` or more [granular permissions](https://cloud.google.com/resource-manager/docs/creating-managing-projects#creating_a_project)
+- For Create GCS Buckets: `roles/storage.admin` or more [granular permissions](https://cloud.google.com/storage/docs/access-control/iam-roles)
+- For Create GCS Bucket IAM Policy: `roles/storage.admin` or more [granular permissions](https://cloud.google.com/storage/docs/access-control/iam-roles)
 
 ## Usage Examples
 
@@ -87,6 +89,20 @@ steps:
       displayName: ${{ parameters.displayName }}
       parent: ${{ parameters.parent }}
       projectId: ${{ parameters.projectId }}
+```
+
+### Creating a GCS Bucket
+
+```yaml
+steps:
+  - id: create-bucket
+    name: Create GCP Bucket
+    action: datolabs:gcp:bucket:create
+    input:
+      bucketName: ${{ parameters.bucketName }}
+      project: ${{ parameters.project }}
+      autoClass: ${{ parameters.autoclass }}
+      location: ${{ parameters.location }}
 ```
 
 Full template examples can be found in the [examples](../../examples) directory.

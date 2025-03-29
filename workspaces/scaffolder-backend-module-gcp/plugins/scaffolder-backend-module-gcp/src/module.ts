@@ -32,6 +32,7 @@ export const scaffolderBackendModuleGCP = createBackendModule({
         scaffolder.addActions(
           backendModuleGCP.createGcpSecretsManagerCreateAction(),
           backendModuleGCP.createGcpProjectCreateAction(),
+          backendModuleGCP.createGcpGcsBucketCreateAction(),
         );
       },
     });

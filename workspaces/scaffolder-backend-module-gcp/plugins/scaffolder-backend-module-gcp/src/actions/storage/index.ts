@@ -13,6 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from './secrets-manager';
-export * from './resource-manager';
-export * from './storage';
+export * from './create';
