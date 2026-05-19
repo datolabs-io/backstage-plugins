@@ -18,6 +18,11 @@ import {
   TemplateAction,
 } from '@backstage/plugin-scaffolder-node';
 import { Storage } from '@google-cloud/storage';
+import {
+  buildGoogleClientOptions,
+  describeGoogleAccessToken,
+  resolveGoogleAccessToken,
+} from '../auth';
 
 export function createGcpGcsBucketCreateAction(): TemplateAction<{
   project: string;
@@ -27,6 +32,7 @@ export function createGcpGcsBucketCreateAction(): TemplateAction<{
   location: string;
   storageClass: string;
   versioning: boolean;
+  token?: string;
 }> {
   return createTemplateAction({
     id: 'datolabs:gcp:bucket:create',
@@ -83,11 +89,16 @@ export function createGcpGcsBucketCreateAction(): TemplateAction<{
             required: false,
             default: false,
           },
+          token: {
+            title: 'Google OAuth access token',
+            description:
+              'Optional Google OAuth access token to authenticate the request. If omitted, `secrets.googleAccessToken` is used, otherwise Application Default Credentials are used.',
+            type: 'string',
+          },
         },
       },
     },
     async handler(ctx) {
-      const storageClient = new Storage();
       const {
         autoClass = false,
         bucketName,
@@ -96,7 +107,13 @@ export function createGcpGcsBucketCreateAction(): TemplateAction<{
         project,
         storageClass = 'standard',
         versioning = false,
+        token,
       } = ctx.input;
+      const resolved = resolveGoogleAccessToken(ctx.secrets, token);
+      ctx.logger.info(describeGoogleAccessToken(resolved));
+      const storageClient = new Storage(
+        buildGoogleClientOptions(resolved.token),
+      );
 
       try {
         const request = {

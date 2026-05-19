@@ -23,15 +23,50 @@ backend.add(import('@datolabs/plugin-scaffolder-backend-module-gcp'));
 
 ### Authentication
 
-This plugin uses Application Default Credentials (ADC) for authentication with GCP services. ADC provides a strategy to automatically find credentials based on the application environment.
+This plugin supports two authentication modes:
 
-The authentication library searches for credentials in the following order:
+1. **End-user OAuth token (recommended)** — the action authenticates as the
+   Backstage user that triggered the template. GCP API calls are then
+   subject to that user's IAM permissions, removing the need for a
+   long-lived service account.
+2. **Application Default Credentials (ADC)** — used as a fallback when no
+   user token is provided.
+
+#### Using the end-user's Google OAuth token
+
+Each action accepts the user's Google OAuth access token via either:
+
+- `ctx.secrets.googleAccessToken` (recommended), or
+- an explicit `token` input on the action.
+
+A typical setup:
+
+1. Configure the [Google auth provider](https://backstage.io/docs/auth/google/provider/)
+   in your Backstage backend so users can sign in with Google. See the
+   [`broadinstitute/backstage` reference implementation](https://github.com/broadinstitute/backstage/blob/main/backstage/packages/backend/src/index.ts#L30-L93)
+   for a working example.
+2. In the frontend, request a Google access token with the scopes the
+   action needs (e.g. `https://www.googleapis.com/auth/cloud-platform`)
+   using `googleAuthApiRef.getAccessToken(...)` and forward it to the
+   scaffolder task as a secret named `googleAccessToken`. This is
+   typically done with a custom scaffolder field extension — a working
+   copy/paste example is available in
+   [`examples/field-extension`](../../examples/field-extension).
+3. The action will then authenticate to GCP as the signed-in user.
+
+Make sure the user has the necessary IAM roles for the action being
+invoked.
+
+#### Application Default Credentials (fallback)
+
+When no user token is supplied, the plugin falls back to ADC. Credentials
+are searched in this order:
 
 1. `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
 2. User credentials set up by using the Google Cloud CLI.
 3. The attached service account (when running on GCP).
 
-#### Local Development
+##### Local Development
 
 For local development, you have two options:
 
@@ -47,11 +82,15 @@ For local development, you have two options:
    gcloud auth application-default login
    ```
 
-#### Production Environment
+##### Production Environment
 
-For production deployments on GCP (Cloud Run, GKE, etc.), we recommend using the default compute service account or attaching a custom service account to your workload. This is more secure than using service account keys.
+For production deployments on GCP (Cloud Run, GKE, etc.), we recommend
+using the default compute service account or attaching a custom service
+account to your workload. This is more secure than using service account
+keys.
 
-Make sure the service account has the necessary IAM roles for the actions you plan to use:
+Make sure the principal (user or service account) has the necessary IAM
+roles for the actions you plan to use:
 
 - For Secret Manager: `roles/secretmanager.admin` or more granular permissions
 - For Create projects: `roles/resourcemanager.projectCreator` or more [granular permissions](https://cloud.google.com/resource-manager/docs/creating-managing-projects#creating_a_project)

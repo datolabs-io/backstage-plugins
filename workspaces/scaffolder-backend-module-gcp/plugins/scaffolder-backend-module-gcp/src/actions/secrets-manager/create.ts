@@ -18,12 +18,18 @@ import {
   TemplateAction,
 } from '@backstage/plugin-scaffolder-node';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
+import {
+  buildGoogleClientOptions,
+  describeGoogleAccessToken,
+  resolveGoogleAccessToken,
+} from '../auth';
 
 export function createGcpSecretsManagerCreateAction(): TemplateAction<{
   name: string;
   value: string;
   labels?: Record<string, string>;
   project: string;
+  token?: string;
 }> {
   return createTemplateAction({
     id: 'datolabs:gcp:secrets-manager:create',
@@ -57,12 +63,22 @@ export function createGcpSecretsManagerCreateAction(): TemplateAction<{
             description: 'The GCP project ID where the secret will be created',
             type: 'string',
           },
+          token: {
+            title: 'Google OAuth access token',
+            description:
+              'Optional Google OAuth access token to authenticate the request. If omitted, `secrets.googleAccessToken` is used, otherwise Application Default Credentials are used.',
+            type: 'string',
+          },
         },
       },
     },
     async handler(ctx) {
-      const client = new SecretManagerServiceClient();
-      const { name, value, labels, project } = ctx.input;
+      const { name, value, labels, project, token } = ctx.input;
+      const resolved = resolveGoogleAccessToken(ctx.secrets, token);
+      ctx.logger.info(describeGoogleAccessToken(resolved));
+      const client = new SecretManagerServiceClient(
+        buildGoogleClientOptions(resolved.token),
+      );
 
       try {
         const [secret] = await client.createSecret({

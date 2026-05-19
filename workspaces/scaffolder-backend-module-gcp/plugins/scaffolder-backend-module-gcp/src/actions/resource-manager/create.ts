@@ -19,6 +19,11 @@ import {
 } from '@backstage/plugin-scaffolder-node';
 // import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 import { ProjectsClient } from '@google-cloud/resource-manager';
+import {
+  buildGoogleClientOptions,
+  describeGoogleAccessToken,
+  resolveGoogleAccessToken,
+} from '../auth';
 
 export function createGcpProjectCreateAction(): TemplateAction<{
   displayName: string;
@@ -26,6 +31,7 @@ export function createGcpProjectCreateAction(): TemplateAction<{
   labels?: Record<string, string>;
   tags?: Record<string, string>;
   projectId: string;
+  token?: string;
 }> {
   return createTemplateAction({
     id: 'datolabs:gcp:project:create',
@@ -69,12 +75,22 @@ export function createGcpProjectCreateAction(): TemplateAction<{
             description: 'The GCP project ID',
             type: 'string',
           },
+          token: {
+            title: 'Google OAuth access token',
+            description:
+              'Optional Google OAuth access token to authenticate the request. If omitted, `secrets.googleAccessToken` is used, otherwise Application Default Credentials are used.',
+            type: 'string',
+          },
         },
       },
     },
     async handler(ctx) {
-      const resourcemanagerClient = new ProjectsClient();
-      const { displayName, parent, labels, projectId, tags } = ctx.input;
+      const { displayName, parent, labels, projectId, tags, token } = ctx.input;
+      const resolved = resolveGoogleAccessToken(ctx.secrets, token);
+      ctx.logger.info(describeGoogleAccessToken(resolved));
+      const resourcemanagerClient = new ProjectsClient(
+        buildGoogleClientOptions(resolved.token),
+      );
 
       try {
         const request = {
