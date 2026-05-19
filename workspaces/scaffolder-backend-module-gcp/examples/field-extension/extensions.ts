@@ -7,8 +7,8 @@ import { GoogleAccessTokenField } from './GoogleAccessTokenFieldExtension';
  * Referenced from a template via `ui:field: GoogleAccessToken`.
  */
 export const GoogleAccessTokenFieldExtension = scaffolderPlugin.provide(
-    createScaffolderFieldExtension({
-        name: 'GoogleAccessToken',
-        component: GoogleAccessTokenField,
-    }),
+  createScaffolderFieldExtension({
+    name: 'GoogleAccessToken',
+    component: GoogleAccessTokenField,
+  }),
 );

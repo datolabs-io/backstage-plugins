@@ -38,10 +38,10 @@ import type { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-
 const DEFAULT_SCOPES = ['https://www.googleapis.com/auth/cloud-platform'];
 
 export type GoogleAccessTokenFieldUiOptions = {
-    /** Override the requested OAuth scopes. */
-    scopes?: string[];
-    /** Override the secret key the token is stored under. Defaults to `googleAccessToken`. */
-    secretKey?: string;
+  /** Override the requested OAuth scopes. */
+  scopes?: string[];
+  /** Override the secret key the token is stored under. Defaults to `googleAccessToken`. */
+  secretKey?: string;
 };
 
 /**
@@ -53,42 +53,35 @@ export type GoogleAccessTokenFieldUiOptions = {
  * Google auth provider config so the session refresh token covers them.
  */
 export const GoogleAccessTokenField = (
-    props: FieldExtensionComponentProps<
-        string,
-        GoogleAccessTokenFieldUiOptions
-    >,
+  props: FieldExtensionComponentProps<string, GoogleAccessTokenFieldUiOptions>,
 ) => {
-    const { onChange, uiSchema } = props;
-    const googleAuth = useApi(googleAuthApiRef);
-    const { setSecrets } = useTemplateSecrets();
+  const { onChange, uiSchema } = props;
+  const googleAuth = useApi(googleAuthApiRef);
+  const { setSecrets } = useTemplateSecrets();
 
-    const scopes = uiSchema?.['ui:options']?.scopes ?? DEFAULT_SCOPES;
-    const secretKey =
-        uiSchema?.['ui:options']?.secretKey ?? 'googleAccessToken';
+  const scopes = uiSchema?.['ui:options']?.scopes ?? DEFAULT_SCOPES;
+  const secretKey = uiSchema?.['ui:options']?.secretKey ?? 'googleAccessToken';
 
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const token = await googleAuth.getAccessToken(scopes);
-                if (cancelled) return;
-                setSecrets({ [secretKey]: token });
-                onChange(token);
-            } catch (e) {
-                if (!cancelled) {
-                    // eslint-disable-next-line no-console
-                    console.error(
-                        '[GoogleAccessTokenField] failed to acquire token:',
-                        e,
-                    );
-                }
-            }
-        })();
-        return () => {
-            cancelled = true;
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await googleAuth.getAccessToken(scopes);
+        if (cancelled) return;
+        setSecrets({ [secretKey]: token });
+        onChange(token);
+      } catch (e) {
+        if (!cancelled) {
+          // eslint-disable-next-line no-console
+          console.error('[GoogleAccessTokenField] failed to acquire token:', e);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    return null;
+  return null;
 };

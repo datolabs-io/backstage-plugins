@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { OAuth2Client } from 'google-auth-library';
+import { UserRefreshClient } from 'google-auth-library';
 
 export type GoogleAccessTokenSource = 'input' | 'secret' | 'none';
 
@@ -50,14 +50,30 @@ export function resolveGoogleAccessToken(
  * as the supplied user access token. When no token is provided, returns
  * an empty object so the client falls back to Application Default
  * Credentials.
+ *
+ * Uses `UserRefreshClient` (a subclass of `OAuth2Client`) so the
+ * resulting auth client is compatible with all three GCP client
+ * families used by this plugin:
+ *   - REST-based `@google-cloud/storage`
+ *   - gRPC/gax-based `@google-cloud/secret-manager`
+ *   - gRPC/gax-based `@google-cloud/resource-manager`
+ *
+ * The return type for `authClient` is intentionally widened to `any`
+ * because each of those packages bundles its *own* copy of
+ * `google-auth-library` with subtly different `UserRefreshClient`
+ * declarations (e.g. v10-rc adds `addUserProjectAndAuthHeaders`).
+ * The objects are interchangeable at runtime — only the duplicated
+ * TypeScript declarations conflict, so a single concrete type cannot
+ * satisfy all three call sites simultaneously.
  */
 export function buildGoogleClientOptions(token?: string): {
-  authClient?: OAuth2Client;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  authClient?: any;
 } {
   if (!token) {
     return {};
   }
-  const authClient = new OAuth2Client();
+  const authClient = new UserRefreshClient();
   authClient.setCredentials({ access_token: token });
   return { authClient };
 }
