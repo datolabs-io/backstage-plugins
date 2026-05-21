@@ -32,7 +32,6 @@ export function createGcpGcsBucketCreateAction(): TemplateAction<{
   location: string;
   storageClass: string;
   versioning: boolean;
-  token?: string;
 }> {
   return createTemplateAction({
     id: 'datolabs:gcp:bucket:create',
@@ -89,12 +88,6 @@ export function createGcpGcsBucketCreateAction(): TemplateAction<{
             required: false,
             default: false,
           },
-          token: {
-            title: 'Google OAuth access token',
-            description:
-              'Optional Google OAuth access token to authenticate the request. If omitted, `secrets.googleAccessToken` is used, otherwise Application Default Credentials are used.',
-            type: 'string',
-          },
         },
       },
     },
@@ -107,12 +100,11 @@ export function createGcpGcsBucketCreateAction(): TemplateAction<{
         project,
         storageClass = 'standard',
         versioning = false,
-        token,
       } = ctx.input;
-      const resolved = resolveGoogleAccessToken(ctx.secrets, token);
+      const resolved = resolveGoogleAccessToken(ctx.secrets);
       ctx.logger.info(describeGoogleAccessToken(resolved));
       const storageClient = new Storage(
-        buildGoogleClientOptions(resolved.token),
+        buildGoogleClientOptions(resolved.token, project),
       );
 
       try {

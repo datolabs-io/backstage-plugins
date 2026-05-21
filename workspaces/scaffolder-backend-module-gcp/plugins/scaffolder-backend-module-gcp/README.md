@@ -36,10 +36,10 @@ This plugin supports two authentication modes:
 
 #### Using the end-user's Google OAuth token
 
-Each action accepts the user's Google OAuth access token via either:
-
-- `ctx.secrets.googleAccessToken` (recommended), or
-- an explicit `token` input on the action.
+Each action reads the user's Google OAuth access token from
+`ctx.secrets.googleAccessToken`. Secrets stay in memory for the task
+run and are not persisted to the scaffolder database, so the token is
+never written to durable storage.
 
 A typical setup:
 
@@ -118,7 +118,6 @@ Each action logs which credential source it ended up using when it runs.
 Look for one of these lines in the Scaffolder task log:
 
 - `using Google OAuth access token from secrets.googleAccessToken (length=…)`
-- `using Google OAuth access token from action input (length=…)`
 - `no Google OAuth access token provided; falling back to Application Default Credentials`
 
 The token value itself is never logged.

@@ -26,16 +26,7 @@ describe('resolveGoogleAccessToken', () => {
     expect(resolveGoogleAccessToken({})).toEqual({ source: 'none' });
   });
 
-  it('prefers the explicit token over the secret', () => {
-    expect(
-      resolveGoogleAccessToken(
-        { googleAccessToken: 'from-secret' },
-        'explicit',
-      ),
-    ).toEqual({ token: 'explicit', source: 'input' });
-  });
-
-  it('falls back to secrets.googleAccessToken', () => {
+  it('reads secrets.googleAccessToken', () => {
     expect(
       resolveGoogleAccessToken({ googleAccessToken: 'from-secret' }),
     ).toEqual({ token: 'from-secret', source: 'secret' });
@@ -43,7 +34,7 @@ describe('resolveGoogleAccessToken', () => {
 });
 
 describe('buildGoogleClientOptions', () => {
-  it('returns empty options when no token is supplied', () => {
+  it('returns empty options when neither token nor projectId is supplied', () => {
     expect(buildGoogleClientOptions()).toEqual({});
     expect(buildGoogleClientOptions(undefined)).toEqual({});
   });
@@ -53,26 +44,26 @@ describe('buildGoogleClientOptions', () => {
     expect(opts.authClient).toBeDefined();
     expect(opts.authClient!.credentials.access_token).toBe('abc123');
   });
+
+  it('includes projectId when supplied, so the client does not auto-detect one', () => {
+    expect(buildGoogleClientOptions(undefined, 'my-proj')).toEqual({
+      projectId: 'my-proj',
+    });
+    const opts = buildGoogleClientOptions('abc123', 'my-proj');
+    expect(opts.projectId).toBe('my-proj');
+    expect(opts.authClient).toBeDefined();
+  });
 });
 
 describe('describeGoogleAccessToken', () => {
-  it('describes an input-sourced token without leaking the value', () => {
+  it('describes a secret-sourced token without leaking the value', () => {
     const msg = describeGoogleAccessToken({
       token: 'super-secret',
-      source: 'input',
-    });
-    expect(msg).toContain('action input');
-    expect(msg).toContain('length=12');
-    expect(msg).not.toContain('super-secret');
-  });
-
-  it('describes a secret-sourced token', () => {
-    const msg = describeGoogleAccessToken({
-      token: 'tok',
       source: 'secret',
     });
     expect(msg).toContain('secrets.googleAccessToken');
-    expect(msg).toContain('length=3');
+    expect(msg).toContain('length=12');
+    expect(msg).not.toContain('super-secret');
   });
 
   it('describes the ADC fallback when no token is present', () => {

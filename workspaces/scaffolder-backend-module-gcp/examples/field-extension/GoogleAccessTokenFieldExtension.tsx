@@ -40,14 +40,18 @@ const DEFAULT_SCOPES = ['https://www.googleapis.com/auth/cloud-platform'];
 export type GoogleAccessTokenFieldUiOptions = {
   /** Override the requested OAuth scopes. */
   scopes?: string[];
-  /** Override the secret key the token is stored under. Defaults to `googleAccessToken`. */
-  secretKey?: string;
 };
 
 /**
  * Field component. Renders nothing — silently acquires the signed-in
  * user's Google OAuth access token and stores it in Scaffolder task
- * secrets so backend GCP actions can use it.
+ * secrets (under `googleAccessToken`) so backend GCP actions can use it.
+ *
+ * The token is intentionally only written to `setSecrets` — scaffolder
+ * secrets stay in memory for the task run and are not persisted. The
+ * field deliberately does NOT call `onChange` with the token value, so
+ * the token never ends up in the form's `parameters` (which scaffolder
+ * persists to its database).
  *
  * Requires `additionalScopes` to include the requested scopes in the
  * Google auth provider config so the session refresh token covers them.
@@ -55,12 +59,11 @@ export type GoogleAccessTokenFieldUiOptions = {
 export const GoogleAccessTokenField = (
   props: FieldExtensionComponentProps<string, GoogleAccessTokenFieldUiOptions>,
 ) => {
-  const { onChange, uiSchema } = props;
+  const { uiSchema } = props;
   const googleAuth = useApi(googleAuthApiRef);
   const { setSecrets } = useTemplateSecrets();
 
   const scopes = uiSchema?.['ui:options']?.scopes ?? DEFAULT_SCOPES;
-  const secretKey = uiSchema?.['ui:options']?.secretKey ?? 'googleAccessToken';
 
   useEffect(() => {
     let cancelled = false;
@@ -68,8 +71,7 @@ export const GoogleAccessTokenField = (
       try {
         const token = await googleAuth.getAccessToken(scopes);
         if (cancelled) return;
-        setSecrets({ [secretKey]: token });
-        onChange(token);
+        setSecrets({ googleAccessToken: token });
       } catch (e) {
         if (!cancelled) {
           // eslint-disable-next-line no-console

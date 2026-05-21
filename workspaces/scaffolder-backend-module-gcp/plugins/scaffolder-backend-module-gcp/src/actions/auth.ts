@@ -15,7 +15,7 @@
  */
 import { UserRefreshClient } from 'google-auth-library';
 
-export type GoogleAccessTokenSource = 'input' | 'secret' | 'none';
+export type GoogleAccessTokenSource = 'secret' | 'none';
 
 export interface ResolvedGoogleAccessToken {
   token?: string;
@@ -23,22 +23,17 @@ export interface ResolvedGoogleAccessToken {
 }
 
 /**
- * Resolve a Google OAuth2 access token from the available scaffolder
- * action context. Lookup order:
- *   1. An explicit `token` value (e.g. from action input).
- *   2. `ctx.secrets.googleAccessToken` (recommended way to forward the
- *      end user's Google OAuth token from the Scaffolder UI).
+ * Resolve a Google OAuth2 access token from the scaffolder action
+ * context. Reads `ctx.secrets.googleAccessToken` — the secrets channel
+ * is the only safe path, since scaffolder secrets stay in memory and
+ * are not persisted to the task database (unlike action inputs).
  *
  * Returns `{ source: 'none' }` when no token is available, which signals
  * callers to fall back to Application Default Credentials (ADC).
  */
 export function resolveGoogleAccessToken(
   secrets: Record<string, string> | undefined,
-  explicitToken?: string,
 ): ResolvedGoogleAccessToken {
-  if (explicitToken) {
-    return { token: explicitToken, source: 'input' };
-  }
   if (secrets?.googleAccessToken) {
     return { token: secrets.googleAccessToken, source: 'secret' };
   }
@@ -47,9 +42,15 @@ export function resolveGoogleAccessToken(
 
 /**
  * Build options for a Google Cloud client library that will authenticate
- * as the supplied user access token. When no token is provided, returns
- * an empty object so the client falls back to Application Default
- * Credentials.
+ * as the supplied user access token. When no token is provided, the
+ * client falls back to Application Default Credentials.
+ *
+ * `projectId` should be passed whenever the caller already knows the
+ * target project. With a user OAuth token the auth client has no
+ * associated project, so GCP client libraries fail to auto-detect one
+ * (see `findAndCacheProjectId` in `google-auth-library`). Passing it
+ * explicitly avoids the lookup and the "Unable to detect a Project Id"
+ * error.
  *
  * Uses `UserRefreshClient` (a subclass of `OAuth2Client`) so the
  * resulting auth client is compatible with all three GCP client
@@ -66,16 +67,65 @@ export function resolveGoogleAccessToken(
  * TypeScript declarations conflict, so a single concrete type cannot
  * satisfy all three call sites simultaneously.
  */
-export function buildGoogleClientOptions(token?: string): {
+export function buildGoogleClientOptions(
+  token?: string,
+  projectId?: string,
+): {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   authClient?: any;
+  projectId?: string;
 } {
-  if (!token) {
-    return {};
+  const opts: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    authClient?: any;
+    projectId?: string;
+  } = {};
+  if (projectId) {
+    opts.projectId = projectId;
   }
-  const authClient = new UserRefreshClient();
-  authClient.setCredentials({ access_token: token });
-  return { authClient };
+  if (token) {
+    const authClient = new UserRefreshClient();
+    authClient.setCredentials({ access_token: token });
+    // The hoisted `google-auth-library` (v9) returns a plain object from
+    // `getRequestHeaders()`. The copy bundled with
+    // `@google-cloud/resource-manager` (v10-rc) iterates that result via
+    // `headers.forEach(value, key)`, which fails on a plain object with
+    // "headers.forEach is not a function". We can't just convert the
+    // result to a `Headers` instance — the REST-based storage client
+    // still uses the v9 contract and reads headers via
+    // `Object.entries(...)`, which would yield nothing from a `Headers`.
+    // Instead, attach a non-enumerable `forEach` to the plain object so
+    // both consumers work.
+    const original = authClient.getRequestHeaders.bind(authClient);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (authClient as any).getRequestHeaders = async (...args: any[]) => {
+      const result = await original(...(args as []));
+      if (
+        result &&
+        typeof (result as { forEach?: unknown }).forEach === 'function'
+      ) {
+        return result;
+      }
+      const headers = result as Record<string, unknown>;
+      Object.defineProperty(headers, 'forEach', {
+        value: (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          cb: (value: unknown, key: string, parent: any) => void,
+          thisArg?: unknown,
+        ) => {
+          for (const key of Object.keys(headers)) {
+            cb.call(thisArg, headers[key], key, headers);
+          }
+        },
+        enumerable: false,
+        configurable: true,
+        writable: true,
+      });
+      return result;
+    };
+    opts.authClient = authClient;
+  }
+  return opts;
 }
 
 /**
@@ -86,10 +136,6 @@ export function describeGoogleAccessToken(
   resolved: ResolvedGoogleAccessToken,
 ): string {
   switch (resolved.source) {
-    case 'input':
-      return `using Google OAuth access token from action input (length=${
-        resolved.token?.length ?? 0
-      })`;
     case 'secret':
       return `using Google OAuth access token from secrets.googleAccessToken (length=${
         resolved.token?.length ?? 0

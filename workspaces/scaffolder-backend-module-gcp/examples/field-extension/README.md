@@ -83,9 +83,11 @@ Backstage app conventions.
 ## Using the field in a template
 
 Add a hidden parameter that uses the field. The field renders nothing
-visible — it just populates `secrets.googleAccessToken` (and the form
-parameter value) when the form loads, so the backend GCP action can
-pick it up automatically.
+visible — it populates `secrets.googleAccessToken` when the form loads
+so the backend GCP action can pick it up automatically. The token is
+written only to scaffolder secrets (which stay in memory) and never to
+the form's `parameters`, so it is not persisted to the scaffolder
+database.
 
 ```yaml
 apiVersion: scaffolder.backstage.io/v1beta3
@@ -107,21 +109,16 @@ spec:
       properties:
         # Hidden field — invokes the field extension to acquire the
         # user's Google OAuth access token and stash it in
-        # `secrets.googleAccessToken` for the backend action.
+        # `secrets.googleAccessToken` for the backend action. The
+        # parameter value itself stays empty.
         googleToken:
           type: string
           ui:field: GoogleAccessToken
           ui:widget: hidden
           ui:options:
-            # Optional — defaults shown.
+            # Optional — default shown.
             scopes:
               - https://www.googleapis.com/auth/cloud-platform
-            secretKey: googleAccessToken
-          # Hide from the review step so users aren't confused by a
-          # mysterious blank/opaque value.
-          ui:backstage:
-            review:
-              show: false
 
         bucketName:
           title: Bucket name (must be globally unique)
@@ -147,33 +144,14 @@ spec:
         project: ${{ parameters.project }}
         autoClass: ${{ parameters.autoclass }}
         location: ${{ parameters.location }}
-        # No `token` input is needed — the action automatically reads
-        # `secrets.googleAccessToken`.
+        # No token input — the action reads `secrets.googleAccessToken`
+        # directly.
 
   output:
     links:
       - title: View the Bucket in GCP Console
         url: https://console.cloud.google.com/storage/browser?project=${{ parameters.project }}
 ```
-
-### Alternative: pass the token explicitly as an action input
-
-The field component also writes the token to its own form value via
-`onChange(token)`, so if you'd rather not rely on Scaffolder secrets you
-can pass it through as a plain input:
-
-```yaml
-steps:
-  - id: create-bucket
-    action: datolabs:gcp:bucket:create
-    input:
-      bucketName: ${{ parameters.bucketName }}
-      project: ${{ parameters.project }}
-      token: ${{ parameters.googleToken }}
-```
-
-The action prefers an explicit `token` input over `secrets.googleAccessToken`.
-You should pick one of the two approaches, not both.
 
 ## How to verify it's working
 
@@ -183,8 +161,6 @@ After running a template, look in the Scaffolder task log for one of:
 - `using Google OAuth access token from secrets.googleAccessToken (length=…)`
   — the field extension is wired up and the user's token reached the
   action.
-- `using Google OAuth access token from action input (length=…)` — you
-  passed the token via the explicit `token` input.
 - `no Google OAuth access token provided; falling back to Application Default Credentials`
   — the action did not receive a token; it will use ADC on the backend.
 
