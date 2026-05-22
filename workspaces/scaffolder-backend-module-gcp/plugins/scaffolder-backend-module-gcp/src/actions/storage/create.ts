@@ -18,6 +18,11 @@ import {
   TemplateAction,
 } from '@backstage/plugin-scaffolder-node';
 import { Storage } from '@google-cloud/storage';
+import {
+  buildGoogleClientOptions,
+  describeGoogleAccessToken,
+  resolveGoogleAccessToken,
+} from '../auth';
 
 export function createGcpGcsBucketCreateAction(): TemplateAction<{
   project: string;
@@ -87,7 +92,6 @@ export function createGcpGcsBucketCreateAction(): TemplateAction<{
       },
     },
     async handler(ctx) {
-      const storageClient = new Storage();
       const {
         autoClass = false,
         bucketName,
@@ -97,6 +101,11 @@ export function createGcpGcsBucketCreateAction(): TemplateAction<{
         storageClass = 'standard',
         versioning = false,
       } = ctx.input;
+      const resolved = resolveGoogleAccessToken(ctx.secrets);
+      ctx.logger.info(describeGoogleAccessToken(resolved));
+      const storageClient = new Storage(
+        buildGoogleClientOptions(resolved.token, project),
+      );
 
       try {
         const request = {

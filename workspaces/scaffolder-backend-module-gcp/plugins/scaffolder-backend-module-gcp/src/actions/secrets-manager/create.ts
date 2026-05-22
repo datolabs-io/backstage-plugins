@@ -18,6 +18,11 @@ import {
   TemplateAction,
 } from '@backstage/plugin-scaffolder-node';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
+import {
+  buildGoogleClientOptions,
+  describeGoogleAccessToken,
+  resolveGoogleAccessToken,
+} from '../auth';
 
 export function createGcpSecretsManagerCreateAction(): TemplateAction<{
   name: string;
@@ -61,8 +66,12 @@ export function createGcpSecretsManagerCreateAction(): TemplateAction<{
       },
     },
     async handler(ctx) {
-      const client = new SecretManagerServiceClient();
       const { name, value, labels, project } = ctx.input;
+      const resolved = resolveGoogleAccessToken(ctx.secrets);
+      ctx.logger.info(describeGoogleAccessToken(resolved));
+      const client = new SecretManagerServiceClient(
+        buildGoogleClientOptions(resolved.token, project),
+      );
 
       try {
         const [secret] = await client.createSecret({

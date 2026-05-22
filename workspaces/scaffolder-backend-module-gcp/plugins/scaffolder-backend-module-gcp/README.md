@@ -6,7 +6,9 @@ This plugin extends the Backstage Scaffolder Backend with actions for interactin
 
 Currently supported actions:
 
-- `datolabs:gcp:secrets-manager:create` - Create secrets in GCP Secret Manager.
+- `datolabs:gcp:secrets-manager:create` — create secrets in GCP Secret Manager.
+- `datolabs:gcp:project:create` — create a new GCP project under a folder or organization.
+- `datolabs:gcp:bucket:create` — create a new GCS bucket.
 
 ## Installation
 
@@ -23,15 +25,64 @@ backend.add(import('@datolabs/plugin-scaffolder-backend-module-gcp'));
 
 ### Authentication
 
-This plugin uses Application Default Credentials (ADC) for authentication with GCP services. ADC provides a strategy to automatically find credentials based on the application environment.
+This plugin supports two authentication modes:
 
-The authentication library searches for credentials in the following order:
+1. **End-user OAuth token (recommended)** — the action authenticates as the
+   Backstage user that triggered the template. GCP API calls are then
+   subject to that user's IAM permissions, removing the need for a
+   long-lived service account.
+2. **Application Default Credentials (ADC)** — used as a fallback when no
+   user token is provided.
+
+#### Using the end-user's Google OAuth token
+
+Each action reads the user's Google OAuth access token from
+`ctx.secrets.googleAccessToken`. Secrets stay in memory for the task
+run and are not persisted to the scaffolder database, so the token is
+never written to durable storage.
+
+A typical setup:
+
+1. Configure the [Google auth provider](https://backstage.io/docs/auth/google/provider/)
+   in your Backstage backend so users can sign in with Google.
+2. In the Oauth app that you set up in GCP for the auth provider, make sure to add the necessary
+   scopes for the actions you want to use (e.g. `https://www.googleapis.com/auth/cloud-platform`).
+3. Update your app-config.yaml file to include additional scopes in the auth provider configuration:
+
+```yaml
+providers:
+  google:
+    development:
+      clientId:
+        $file: ./secrets/auth-google-client-id
+      clientSecret:
+        $file: ./secrets/auth-google-client-secret
+      additionalScopes:
+        - https://www.googleapis.com/auth/cloud-platform
+```
+
+4. In the frontend, request a Google access token with the scopes the
+   action needs (e.g. `https://www.googleapis.com/auth/cloud-platform`)
+   using `googleAuthApiRef.getAccessToken(...)` and forward it to the
+   scaffolder task as a secret named `googleAccessToken`. This is
+   typically done with a custom scaffolder field extension — a working
+   copy/paste example is available in
+   [`examples/field-extension`](../../examples/field-extension).
+5. The action will then authenticate to GCP as the signed-in user.
+
+Make sure the user has the necessary IAM roles for the action being
+invoked.
+
+#### Application Default Credentials (fallback)
+
+When no user token is supplied, the plugin falls back to ADC. Credentials
+are searched in this order:
 
 1. `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
 2. User credentials set up by using the Google Cloud CLI.
 3. The attached service account (when running on GCP).
 
-#### Local Development
+##### Local Development
 
 For local development, you have two options:
 
@@ -47,16 +98,29 @@ For local development, you have two options:
    gcloud auth application-default login
    ```
 
-#### Production Environment
+##### Production Environment
 
-For production deployments on GCP (Cloud Run, GKE, etc.), we recommend using the default compute service account or attaching a custom service account to your workload. This is more secure than using service account keys.
+For production deployments on GCP (Cloud Run, GKE, etc.), we recommend
+using the default compute service account or attaching a custom service
+account to your workload. This is more secure than using service account
+keys.
 
-Make sure the service account has the necessary IAM roles for the actions you plan to use:
+Make sure the principal (user or service account) has the necessary IAM
+roles for the actions you plan to use:
 
 - For Secret Manager: `roles/secretmanager.admin` or more granular permissions
 - For Create projects: `roles/resourcemanager.projectCreator` or more [granular permissions](https://cloud.google.com/resource-manager/docs/creating-managing-projects#creating_a_project)
 - For Create GCS Buckets: `roles/storage.admin` or more [granular permissions](https://cloud.google.com/storage/docs/access-control/iam-roles)
-- For Create GCS Bucket IAM Policy: `roles/storage.admin` or more [granular permissions](https://cloud.google.com/storage/docs/access-control/iam-roles)
+
+#### Verifying which credential the action used
+
+Each action logs which credential source it ended up using when it runs.
+Look for one of these lines in the Scaffolder task log:
+
+- `using Google OAuth access token from secrets.googleAccessToken (length=…)`
+- `no Google OAuth access token provided; falling back to Application Default Credentials`
+
+The token value itself is never logged.
 
 ## Usage Examples
 
