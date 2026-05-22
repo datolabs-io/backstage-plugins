@@ -1,5 +1,11 @@
 # @datolabs/plugin-scaffolder-backend-module-gcp
 
+## 0.4.0
+
+### Minor Changes
+
+- 1e40fdd: Add ability to use a passed user Oauth Token to the actions
+
 ## 0.3.0
 
 ### Minor Changes
